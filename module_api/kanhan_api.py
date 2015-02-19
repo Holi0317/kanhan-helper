@@ -23,6 +23,7 @@ class kanhan_api(object):
         urllib.request.install_opener(self.opener)
         self.today_id = None
         self.answers = []
+        self.got_today_id = False
         return
 
     def login(self, id, passwd, school_id):
@@ -44,7 +45,7 @@ class kanhan_api(object):
     def get_id(self, day=None):
         """
         Get exercise ID
-        if day is none, will write the id into self.today_id
+        if day is none, will write the id into self.today_id and return it
         otherwise, it will return the id. Please store it for lateron usage
         """
         if day is None:
@@ -52,7 +53,8 @@ class kanhan_api(object):
                 i = k.read().decode()
             search = re.search(r'<a href="/zh-hant/quiz/(\d+/.+?)"', i)
             self.today_id = search.group(1)
-            return
+            self.got_today_id = True
+            return self.today_id
         else:
             day = str(day)
         today = datetime.date.today()
@@ -71,7 +73,10 @@ class kanhan_api(object):
         return s.group(1)
 
     def is_exercise_done(self, id=None):
-        if id is None:
+        if id is None and self.got_today_id:
+            id = self.today_id
+        elif id is None and not self.got_today_id:
+            self.get_id()
             id = self.today_id
         url = PRAC_URL.format(id)
         with urllib.request.urlopen(url) as k:
@@ -88,10 +93,11 @@ class kanhan_api(object):
         take the exercise module
         will call get_tokens automatically
         required augments
-        answers: accept a dict as input. format is qid:answer_id
+        answers: accept a list as input.
         id: accept question id, default as today, please use the one reutrned
             by get_id()
-        This will return the answers and save as self.answers
+        This will return save the answer as self.answers
+        Will return the successful of attempt
         Known Bug: This cannot be used for typing question, which is quite rare
             to see
         """
@@ -100,8 +106,6 @@ class kanhan_api(object):
         elif id is None and self.today_id is None:
             self.get_id()
             id = self.today_id
-            print('Warning: did not call get_id before doing this.' +
-                  'Please contact the developer of the client')
 
         # build informations for taking questions
         exercise_done = self.is_exercise_done(id)
@@ -124,7 +128,6 @@ class kanhan_api(object):
 
         # looping questions
         for i in range(total_qs):
-            #qs_nid = re.search(r'"question_nid".+"(\d+)"', c).group(1)
             try_ans = re.findall(r'"tries\[answer?]".+"(\d+)"', c)
 
             value['form_id'] = 'quiz_question_answering_form'
@@ -149,13 +152,3 @@ class kanhan_api(object):
             ans = con_alph[raw[i]]
             self.answers.append(ans)
         return True
-
-
-def main():
-    api = kanhan_api()
-    if api.login(17132, 'wgfqty', 'stmarks'):
-        api.get_id()
-    return
-
-if __name__ == '__main__':
-    main()
