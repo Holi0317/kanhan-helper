@@ -13,10 +13,10 @@
  - module\_api -- 這套軟件的核心, 令python與看漢中文網可以作出互動
  - cli\_main -- Command Line Interface
  - gui\_main -- Graphic User Interface, NYI
- - web\_main -- 網頁後端, NYI
+ - web\_main -- 批次完成練習的後端
 
 ## Todo
  - [ ] 完成cli的作業
  - [ ] 製作/放棄gui
- - [ ] 製作web版的介面
  - [ ] 製作setup.py, 並加入dependency
+ - [ ] 整理目錄
