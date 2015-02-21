@@ -88,7 +88,7 @@ class kanhan_api(object):
         else:
             return 0
 
-    def take_exercise(self, answers=None, id=None):
+    def take_exercise(self, answers=None, id=None, wrong=0):
         """
         take the exercise module
         will call get_tokens automatically
@@ -96,11 +96,14 @@ class kanhan_api(object):
         answers: accept a list as input.
         id: accept question id, default as today, please use the one reutrned
             by get_id()
+        wrong: accept int, specify number of wrong answer.
+            raise IndexError if that is out of boundary
         This will return save the answer as self.answers
         Will return the successful of attempt
         Known Bug: This cannot be used for typing question, which is quite rare
             to see
         """
+        # Get exercise ID
         if id is None and self.today_id is not None:
             id = self.today_id
         elif id is None and self.today_id is None:
@@ -126,6 +129,14 @@ class kanhan_api(object):
         total_qs = int(re.search('"quiz-num-questions".+(\d+)<?', c).group(1))
         value['op'] = '下一題'
 
+        # Error check
+        if wrong == 0:
+            pass
+        elif wrong-1 > total_qs:
+            raise IndexError
+        if wrong != 0 and answers is None:
+            raise IndexError("Answer is None")
+
         # looping questions
         for i in range(total_qs):
             try_ans = re.findall(r'"tries\[answer?]".+"(\d+)"', c)
@@ -137,8 +148,14 @@ class kanhan_api(object):
 
             if answers is None:
                 value[r'tries[answer]'] = try_ans[0]
-            else:
+            elif wrong == 0:
                 value[r'tries[answer]'] = try_ans[answers[i]]
+            else:
+                if answers[i] == 3:
+                    value[r'tries[answer]'] = try_ans[answers[i-1]]
+                else:
+                    value[r'tries[answer]'] = try_ans[answers[i+1]]
+                wrong -= 1
             # make request
             data = urllib.parse.urlencode(value).encode('utf-8')
             req = urllib.request.Request(url, data)
