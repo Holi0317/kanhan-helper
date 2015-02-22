@@ -6,6 +6,7 @@ import module_api.kanhan_api
 import getpass
 import json
 import datetime
+import click
 
 
 class App(object):
@@ -28,25 +29,26 @@ class App(object):
         except FileNotFoundError:
             use_file_to_login = False
 
-        print('Logging in...')
+        click.echo('Logging in...')
         if not use_file_to_login:
             account = input('User Name: ')
             pwd = getpass.getpass()
             school_id = input('School ID: ')
         else:
-            print("Account file found! Using it to login")
+            click.echo("Account file found! Using it to login")
 
         try:
             login_attempt = self.api.login(account, pwd, school_id)
         except:
-            print("Login Failed!")
+            click.echo("Login Failed!")
+            return
         if login_attempt:
-            print("Login Success!")
+            click.echo("Login Success!")
             return True
         else:
-            print("Login Failed")
+            click.echo("Login Failed")
 
-        print("Would you like to retry? (Y/n)")
+        click.echo("Would you like to retry? (Y/n)")
         rec = rec_yes()
         if rec:
             self.login()
@@ -54,14 +56,14 @@ class App(object):
             return False
 
     def do_exercise(self):
-        print("Randomly filling answers...")
+        click.echo("Randomly filling answers...")
         self.api.get_id()
         self.target_id = self.api.today_id
         exercise_result = self.api.take_exercise()
         if exercise_result:
-            print("Done!")
+            click.echo("Done!")
         else:
-            print("You have already done today's exercise")
+            click.echo("You have already done today's exercise")
             return
         self.dump()
         return
@@ -88,9 +90,10 @@ def rec_yes(default=True):
         elif i == '':
             return default
         else:
-            print('invaild option')
+            click.echo('invaild option')
 
 
+@click.command()
 def main():
     app = App()
     if app.login():
