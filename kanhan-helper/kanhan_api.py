@@ -193,7 +193,7 @@ class kanhan_api(object):
 
         search = re.search(
             r'<div id="quiz_score_possible">.*?(\d{1})</em>', c)
-        total_qs = search.group(1)
+        total_qs = int(search.group(1))
         answers = []
         raw = re.findall(r'This option is correct.+<td><?p?>?(\w)', c)
         con_alph = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
