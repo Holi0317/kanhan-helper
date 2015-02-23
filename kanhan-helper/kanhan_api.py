@@ -12,6 +12,7 @@ MAIN_URL = 'http://pth-reading.chinese.kanhan.com/'
 SEARCH_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/article/search'
 PRAC_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/quiz/{0}'
 EXER_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/node/{0}/take'
+RESULT_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/node/{0}/myresults'
 
 
 class kanhan_api(object):
@@ -169,3 +170,34 @@ class kanhan_api(object):
             ans = con_alph[raw[i]]
             self.answers.append(ans)
         return True
+
+    def get_answers(self, id=None):
+        # Get exercise ID
+        if id is None and self.today_id is not None:
+            id = self.today_id
+        elif id is None and self.today_id is None:
+            self.get_id()
+            id = self.today_id
+
+        real_id = id.split(r'/')[0]
+        url = RESULT_URL.format(real_id)
+        with urllib.request.urlopen(url) as k:
+            raw = k.read().decode()
+
+        # search for answer url
+        ex_code = re.search(
+            r'<td><a href="/zh-hant/node/\d+/myresults/(\d+)">更多...', raw)
+        url = '/'.join([url, ex_code.group(1)])
+        with urllib.request.urlopen(url) as k:
+            c = k.read().decode()
+
+        search = re.search(
+            r'<div id="quiz_score_possible">.*?(\d{1})</em>', c)
+        total_qs = search.group(1)
+        answers = []
+        raw = re.findall(r'This option is correct.+<td><?p?>?(\w)', c)
+        con_alph = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+        for i in range(total_qs):
+            ans = con_alph[raw[i]]
+            answers.append(ans)
+        return answers
