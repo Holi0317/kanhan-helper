@@ -69,27 +69,51 @@ def do_exercise(sacrifice):
         if sacrifice is None:
             click.echo('No need to sacrifice')
     else:
+        # Sacrifice
+        select_to_sac = False
+        attempt = 1
         if len(object_list) == 1:
             the_selected_one = object_list[0]
         elif sacrifice is not None:
             the_selected_one = None
+            select_to_sac = True
             for i in object_list:
                 if i.id == sacrifice:
                     the_selected_one = i
                     break
             if the_selected_one is None:
-                click.echo("sacrificer is not in my list")
-                click.echo("Randomly generating it")
-                ran = randrange(0, len(object_list)-1)
-                the_selected_one = object_list[ran]
+                click.echo("Wrong pargment. Could not find sacrificer")
+                exit(1)
         else:
             ran = randrange(0, len(object_list)-1)
             the_selected_one = object_list[ran]
         click.echo("Sacrificing {0} for todays answwer".format(
             the_selected_one.id))
-        if not the_selected_one.api.take_exercise():
-            click.echo("Failed, he has done his exercise")
-            exit(1)
+
+        while True:
+            do_return = the_selected_one.api.take_exercise()
+            if do_return:
+                click.echo("Successfuly sacrificed")
+                break
+            else:
+                click.echo("Failed, he has done his exercise")
+                click.echo("Removing him from the list")
+                object_list.remove(the_selected_one)
+                if select_to_sac:
+                    click.echo("Could not sacrifice. Abording...")
+                    exit(1)
+                elif len(object_list) == 0:
+                    click.echo("No more people in the list. Abording...")
+                else:
+                    attempt += 1
+                    ran = randrange(0, len(object_list)-1)
+                    the_selected_one = object_list[ran]
+                    click.echo("Sacrifice {0} for today's answer. Attempt {1}"
+                               .format(the_selected_one.id, attempt))
+            if attempt == 11:
+                click.echo("Reached maximum attempt (10). Abording...")
+                exit(1)
+
         answer = the_selected_one.api.answers
         dump(answer, path)
 
