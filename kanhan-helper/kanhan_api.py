@@ -187,6 +187,8 @@ class kanhan_api(object):
         # search for answer url
         ex_code = re.search(
             r'<td><a href="/zh-hant/node/\d+/myresults/(\d+)">更多...', raw)
+        if not ex_code:
+            return None
         url = '/'.join([url, ex_code.group(1)])
         with urllib.request.urlopen(url) as k:
             c = k.read().decode()

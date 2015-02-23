@@ -73,6 +73,9 @@ def get_answer(day):
         id = api.get_id(day=day)
     click.echo("Getting answer for {0}".format(day))
     ans = api.get_answers(id=id)
+    if ans is None:
+        click.echo("You have not done that day's exercise")
+        exit(1)
     dump(ans)
     exit(0)
 
