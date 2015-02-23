@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
-import module_api.kanhan_api
+import kanhan_api
 import getpass
 import json
 import datetime
@@ -14,7 +14,7 @@ class App(object):
     Main object for the ui
     """
     def __init__(self):
-        self.api = module_api.kanhan_api.kanhan_api()
+        self.api = kanhan_api.kanhan_api()
         self.today_answer = None
         self.target_id = None
         return

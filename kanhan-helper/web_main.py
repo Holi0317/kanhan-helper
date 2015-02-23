@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
-import module_api.kanhan_api
+import kanhan_api
 import json
 import click
 import getpass
@@ -13,7 +13,7 @@ import datetime
 
 class App(object):
     def __init__(self):
-        self.api = module_api.kanhan_api.kanhan_api()
+        self.api = kanhan_api.kanhan_api()
         self.failed = False
         return
 
