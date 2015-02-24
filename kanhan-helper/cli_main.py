@@ -19,7 +19,7 @@ def cli():
 @click.option('--day', '-d', default=None, help='The target day of exercise')
 @click.option('--month', '-m', default=None,
               help='The target Month of exercise')
-@click.option('--year', '-m', default=None, help='The target year of exercise')
+@click.option('--year', '-y', default=None, help='The target year of exercise')
 def main(day, month, year):
     api = kanhan_api.kanhan_api()
     login(api)
@@ -90,15 +90,27 @@ def add_user(id, passwd, school_id):
 
 
 @cli.command()
-@click.option('--day', '-d', default=None, help='Date of the exercise')
-def get_answer(day):
+@click.option('--day', '-d', default=None, help='The target day of exercise')
+@click.option('--month', '-m', default=None,
+              help='The target Month of exercise')
+@click.option('--year', '-y', default=None, help='The target year of exercise')
+def get_answer(day, month, year):
     api = kanhan_api.kanhan_api()
     login(api)
-    if day is None:
-        id = api.get_id()
-        day = datetime.date.today().day
+
+    # date format module
+    today = datetime.date.today()
+    if day is None and month is None and year is None:
+        date = today
     else:
-        id = api.get_id(day=day)
+        if day is not None:
+            date = today.replace(day=day)
+        if month is not None:
+            date = today.replace(month=month)
+        if year is not None:
+            date = today.replace(year=year)
+
+    id = api.get_id(date=date)
     click.echo("Getting answer for {0}".format(day))
     ans = api.get_answers(id=id)
     if ans is None:

@@ -12,11 +12,14 @@
 ## 模組
  - module\_api -- 這套軟件的核心, 令python與看漢中文網可以作出互動
  - cli\_main -- Command Line Interface
- - gui\_main -- Graphic User Interface, NYI
- - web\_main -- 批次完成練習的後端
+ - gui\_main -- Graphic User Interface, *已放棄*
+ - web\_main -- 批次完成練習的後端, 與網頁完全沒有關係
 
 ## Todo
- - [ ] 完成cli的作業
- - [ ] 製作/放棄gui
+ - [x] 完成cli的作業
+ - [x] 製作/放棄gui
  - [ ] 製作setup.py, 並加入dependency
- - [ ] 整理目錄
+ - [x] 整理目錄
+
+## 說明頁
+大部份的模塊也有寫上簡單的說明. 而 docs/ 裏也有一些說明. 最新和詳細的說明都以模塊裏的為準.
