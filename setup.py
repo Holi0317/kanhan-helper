@@ -13,7 +13,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'server = kanhan_helper.web_main:cli'
+            'khh-server = kanhan_helper.web_main:cli',
+            'khh-cli = kanhan_helper.cli_main:cli',
         ]
     }
 )
