@@ -12,6 +12,7 @@ MAIN_URL = 'http://pth-reading.chinese.kanhan.com/'
 SEARCH_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/article/search'
 PRAC_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/quiz/{0}'
 EXER_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/node/{0}/take'
+RESULT_URL = 'http://pth-reading.chinese.kanhan.com/zh-hant/node/{0}/myresults'
 
 
 class kanhan_api(object):
@@ -42,25 +43,23 @@ class kanhan_api(object):
             return False
         return True
 
-    def get_id(self, day=None):
+    def get_id(self, date=None):
         """
         Get exercise ID
-        if day is none, will write the id into self.today_id and return it
-        otherwise, it will return the id. Please store it for lateron usage
+        Accept datetime.date as an input
+        if date is None, will write the id into self.today_id and return it
+        otherwise, it will return the id. Please store it for later on usage
+        Will return None if there is no exercise for that day
         """
-        if day is None:
+        if date is None:
+            # Default behaviour, get today id
             with urllib.request.urlopen(MAIN_URL) as k:
                 i = k.read().decode()
             search = re.search(r'<a href="/zh-hant/quiz/(\d+/.+?)"', i)
             self.today_id = search.group(1)
             self.got_today_id = True
             return self.today_id
-        else:
-            day = str(day)
-        today = datetime.date.today()
-        month = str(today.month)
-        year = str(today.year)
-        date = '/'.join([day, month, year])
+        date = '/'.join([date.day, date.month, date.year])
         value = {'field_date2_value_1[min][date]': date,
                  'field_date2_value_1[max][date]': date}
         data = urllib.parse.urlencode(value)
@@ -70,9 +69,20 @@ class kanhan_api(object):
         s = re.search(
             r'<tr class="odd views.+<a href="zh-hant/quiz/(\d+/.+?)">',
             i, re.DOTALL)
-        return s.group(1)
+        if s:
+            return s.group(1)
+        else:
+            return None
 
     def is_exercise_done(self, id=None):
+        """
+        Test if exercise has Done
+        If true, it will return 0
+        else, it will return the token for conducting the exercise
+        This function will automatically be called by take_exercise
+        As take_exercise will return false if the exercise has done,
+        there is no reason for developers to call this function
+        """
         if id is None and self.got_today_id:
             id = self.today_id
         elif id is None and not self.got_today_id:
@@ -169,3 +179,36 @@ class kanhan_api(object):
             ans = con_alph[raw[i]]
             self.answers.append(ans)
         return True
+
+    def get_answers(self, id=None):
+        # Get exercise ID
+        if id is None and self.today_id is not None:
+            id = self.today_id
+        elif id is None and self.today_id is None:
+            self.get_id()
+            id = self.today_id
+
+        real_id = id.split(r'/')[0]
+        url = RESULT_URL.format(real_id)
+        with urllib.request.urlopen(url) as k:
+            raw = k.read().decode()
+
+        # search for answer url
+        ex_code = re.search(
+            r'<td><a href="/zh-hant/node/\d+/myresults/(\d+)">更多...', raw)
+        if not ex_code:
+            return None
+        url = '/'.join([url, ex_code.group(1)])
+        with urllib.request.urlopen(url) as k:
+            c = k.read().decode()
+
+        search = re.search(
+            r'<div id="quiz_score_possible">.*?(\d{1})</em>', c)
+        total_qs = int(search.group(1))
+        answers = []
+        raw = re.findall(r'This option is correct.+<td><?p?>?(\w)', c)
+        con_alph = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+        for i in range(total_qs):
+            ans = con_alph[raw[i]]
+            answers.append(ans)
+        return answers
