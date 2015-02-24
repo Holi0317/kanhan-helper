@@ -5,10 +5,10 @@
 import kanhan_api
 import json
 import click
-import getpass
 import os
 from random import randrange
 import datetime
+import sys.platform
 
 
 class App(object):
@@ -43,7 +43,7 @@ def main(sacrifice):
         exit(1)
     with open(path, 'r') as f:
         raw = f.read()
-        login_data = json.loads(raw)
+    login_data = json.loads(raw)
     object_list = [App() for i in range(len(login_data))]
     remove_list = []
     for i in range(len(object_list)):
@@ -63,8 +63,7 @@ def main(sacrifice):
 
     # Check answers
     today = datetime.date.today()
-    path = os.path.join('data', str(today.year), str(today.month),
-                        str(today.day))
+    path = os.path.join('data', str(today.year), str(today.month))
     if not os.path.exists(path):
         os.makedirs(path)
     path = os.path.join(path, str(today.day))
@@ -137,20 +136,17 @@ def main(sacrifice):
 
 
 @cli.command()
-@click.option('--id', default=None, help='Account of user')
-@click.option('--passwd', default=None, help='Password of user')
-@click.option('--school_id', default=None, help='School ID of user')
+@click.option('--id', help='Account of user', prompt='ID')
+@click.option('--passwd', help='Password of user', hide_input=True,
+              prompt='Password')
+@click.option('--school_id', help='School ID of user', prompt='School id')
 def add_user(id, passwd, school_id):
     click.echo('Adding user...')
-    if id is None:
-        id = input("User's account: ")
-    if passwd is None:
-        passwd = getpass.getpass()
-    if school_id is None:
-        school_id = input("User's School ID: ")
-
     path = os.path.join('data', 'web_data')
     dump([id, passwd, school_id], path)
+    if sys.platform.startswith('linux'):
+        os.chmod(path, 0o400)
+    click.echo('Done')
 
 
 def dump(value, path):
@@ -164,6 +160,7 @@ def dump(value, path):
     data = json.dumps(data, sort_keys=True, indent=4)
     with open(path, 'w') as f:
         f.write(data)
+    return
 
 if __name__ == '__main__':
     cli()
