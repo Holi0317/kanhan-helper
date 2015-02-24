@@ -63,7 +63,7 @@ def main(day, month, year):
 
     if not os.path.isfile(path):
         click.echo("Dumping answers to data...")
-        dump(api.answers)
+        dump(api.answers, date)
         click.echo("Done!")
     exit(0)
 
@@ -99,16 +99,16 @@ def get_answer(day, month, year):
     login(api)
 
     # date format module
-    today = datetime.date.today()
+    date = datetime.date.today()
     if day is None and month is None and year is None:
-        date = today
+        pass
     else:
         if day is not None:
-            date = today.replace(day=day)
+            date = date.replace(day=day)
         if month is not None:
-            date = today.replace(month=month)
+            date = date.replace(month=month)
         if year is not None:
-            date = today.replace(year=year)
+            date = date.replace(year=year)
 
     id = api.get_id(date=date)
     click.echo("Getting answer for {0}".format(day))
@@ -116,28 +116,25 @@ def get_answer(day, month, year):
     if ans is None:
         click.echo("You have not done that day's exercise")
         exit(1)
-    dump(ans)
+    dump(ans, date)
     exit(0)
 
 
 def login(api):
+    click.echo('Logging in...')
     path = os.path.join('data', 'account')
     if os.path.isfile(path):
-        with open(path, 'r', encoding='UTF-8') as f:
-            account = f.readline()
-            pwd = f.readline()
-            school_id = f.readline()
-            use_file_to_login = True
+        click.echo('Account file found. using it to login...')
+        with open(path, 'r') as f:
+            raw = f.read()
+        json_data = json.loads(raw)
+        account = json_data[0]
+        pwd = json_data[1]
+        school_id = json_data[2]
     else:
-        use_file_to_login = False
-
-    click.echo('Logging in...')
-    if not use_file_to_login:
         account = click.prompt('User Name: ')
         pwd = click.prompt('Password: ', hide_input=True)
         school_id = click.prompt('school ID: ')
-    else:
-        click.echo("Account file found! Using it to login")
 
     try:
         login_attempt = api.login(account, pwd, school_id)
@@ -151,12 +148,11 @@ def login(api):
         exit(1)
 
 
-def dump(target):
-    today = datetime.date.today()
-    path = os.path.join('data', str(today.year), str(today.month),
-                        str(today.day))
+def dump(target, date):
+    path = os.path.join('data', str(date.year), str(date.month))
     if not path.exists:
         os.path.makedirs(path)
+    path = os.path.join(path, str(date.day))
     ans = json.dumps(target, sort_keys=True, indent=4)
     with open(path, 'w') as f:
         f.write(ans)
