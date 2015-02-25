@@ -11,31 +11,15 @@ import datetime
 import sys
 
 
-class App(object):
-    def __init__(self):
-        self.api = khh.khhapi.kanhan_api()
-        self.failed = False
-        return
-
-    def login(self, id, passwd, school_id):
-        self.id = id
-        if self.api.login(id, passwd, school_id):
-            return
-        else:
-            self.failed = True
-            return
-
-
 @click.group()
 def cli():
     pass
 
 
 @cli.command()
-@click.option('--sacrifice', default=None,
-              help='specify one user to sacrifice by using the id')
-def main(sacrifice):
-    click.echo('Initializing...')
+def main():
+    api = khh.khhapi.kanhan_api()
+    # Read json file
     path = os.path.join('data', 'web_data')
     if not os.path.isfile(path):
         click.echo('Web_data file not found')
@@ -44,80 +28,75 @@ def main(sacrifice):
     with open(path, 'r') as f:
         raw = f.read()
     login_data = json.loads(raw)
-    object_list = [App() for i in range(len(login_data))]
-    remove_list = []
-    for i in range(len(object_list)):
-        # Login
-        current_obj = object_list[i]
+
+    # Check answer
+    today = datetime.date.today()
+    path = os.path.join('data', str(today.year), str(today.month), str(today.day))
+    if os.path.isfile(path):
+        click.echo('Found answer')
+        with open(path, 'r') as f:
+            raw = f.read()
+        answer = json.loads(raw)
+        need_sacrifice = False
+    else:
+        need_sacrifice = True
+
+    # Main loop
+    for i in range(len(login_data)):
+        api.__init__()
         current_id = login_data[i][0]
         current_passwd = login_data[i][1]
         current_school_id = login_data[i][2]
-        current_obj.login(current_id, current_passwd, current_school_id)
-        if current_obj.failed:
-            click.echo('{0} Failed to login'.format(current_obj.id))
-            remove_list.append(current_obj)
-
-    # Remove failed object
-    for i in remove_list:
-        object_list.remove(i)
-
-    # Check answers
-    today = datetime.date.today()
-    path = os.path.join('data', str(today.year), str(today.month))
-    if not os.path.exists(path):
-        os.makedirs(path)
-    path = os.path.join(path, str(today.day))
-    if os.path.isfile(path):
-        with open(path) as f:
-            raw = f.read()
-        answer = json.loads(raw)
-        if sacrifice is None:
-            click.echo('No need to sacrifice')
-    else:
-        # Sacrifice
-        if len(object_list) == 1:
-            the_selected_one = object_list[0]
-        elif sacrifice is not None:
-            # select to sacrifice module
-            the_selected_one = None
-            for i in len(object_list):
-                current_obj = object_list[i]
-                if current_obj.id == sacrifice:
-                    the_selected_one = object_list.pop(i)
-                    break
-            if the_selected_one is None:
-                # pargment is not in the list
-                click.echo("Wrong pargment. Could not find sacrificer")
-                exit(1)
+        try:
+            login_attempt = api.login(current_id, current_passwd, current_school_id)
+        except:
+            failed = True
+        if login_attempt:
+            failed = False
         else:
-            ran = randrange(0, len(object_list)-1)
-            the_selected_one = object_list.pop(ran)
-        click.echo("Sacrificing {0} for todays answwer".format(
-            the_selected_one.id))
-
-        do_return = the_selected_one.api.take_exercise()
-        if do_return:
-            click.echo("Successfuly sacrificed")
-            answer = the_selected_one.api.answers
+            failed = True
+        if failed:
+            click.echo('{0} failed to login'.format(current_id))
         else:
-            click.echo("He has done his exercise. getting answer")
-            answer = the_selected_one.api.get_answers()
-            if answer is None:
-                click.echo('No exercise today')
+            click.echo('{0} Login succeed'.format(current_id))
+
+            # Get id
+            id = api.get_id()
+            if id is None:
+                click.echo('Today has no exercise')
                 exit(1)
 
-        dump(answer, path)
+            # Sacrifice
+            if need_sacrifice and i == 0:
+                click.echo('Sacrificing {0} for answer'.format(current_id))
+                exercise_result = api.take_exercise()
+                if exercise_result:
+                    click.echo("He has done today's exercise. getting the answer...")
+                    answer = api.get_answers()
+                else:
+                    answer = api.answers
 
-    # Answer question
-    for i in range(len(object_list)):
-        current_obj = object_list[i]
-        ran = randrange(0, 2)
-        if not current_obj.api.take_exercise(answers=answer, wrong=ran):
-            click.echo("{0} has done his exercise".format(
-                current_obj.id))
-        else:
-            click.echo("{0} succeed with {1} mistake(s)".fomrat(
-                current_obj.id, ran))
+                # Dump to data
+                click.echo('Dumping answers to data')
+                path = os.path.join('data', str(today.year), str(today.month))
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                path = os.path.join(path, str(date.day))
+                dump_data = json.dumps(answer, sort_keys=True, indent=4)
+                with open(path, 'w') as f:
+                    f.write(dump_data)
+                need_sacrifice = False
+
+            # Answering question for others
+            if not need_sacrifice:
+                ran = randrange(0,2)
+                exercise_result = api.take_exercise(answers=answer, wrong=ran)
+                if exercise_result:
+                    click.echo('{0} Succeed'.format(current_id))
+                else:
+                    click.echo('{0} Have finished his exercise'.format(current_id))
+
+    return
 
 
 @cli.command()
@@ -130,13 +109,7 @@ def add_user(id, passwd, school_id):
     path = os.path.join('data', 'web_data')
     if sys.platform.startswith('linux'):
         os.chmod(path, 0o600)
-    dump([id, passwd, school_id], path)
-    if sys.platform.startswith('linux'):
-        os.chmod(path, 0o400)
-    click.echo('Done')
-
-
-def dump(value, path):
+    # Dump
     if not os.path.exists('data'):
         os.makedirs('data')
     if os.path.isfile(path):
@@ -149,4 +122,9 @@ def dump(value, path):
     data = json.dumps(data, sort_keys=True, indent=4)
     with open(path, 'w') as f:
         f.write(data)
-    return
+
+    if sys.platform.startswith('linux'):
+        os.chmod(path, 0o400)
+    click.echo('Done')
+
+
