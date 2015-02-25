@@ -59,7 +59,7 @@ class kanhan_api(object):
             self.today_id = search.group(1)
             self.got_today_id = True
             return self.today_id
-        date = '/'.join([date.day, date.month, date.year])
+        date = '/'.join([str(date.day), str(date.month), str(date.year)])
         value = {'field_date2_value_1[min][date]': date,
                  'field_date2_value_1[max][date]': date}
         data = urllib.parse.urlencode(value)
@@ -67,7 +67,7 @@ class kanhan_api(object):
         with urllib.request.urlopen(url) as k:
             i = k.read().decode()
         s = re.search(
-            r'<tr class="odd views.+<a href="zh-hant/quiz/(\d+/.+?)">',
+            r'views-field views-field-title.*<a href="/zh-hant/quiz/(\d+/.+?)">',
             i, re.DOTALL)
         if s:
             return s.group(1)
@@ -159,12 +159,12 @@ class kanhan_api(object):
             if answers is None:
                 value[r'tries[answer]'] = try_ans[0]
             elif wrong == 0:
-                value[r'tries[answer]'] = try_ans[answers[i]]
+                value[r'tries[answer]'] = try_ans[answers[0][i]]
             else:
-                if answers[i] == 3:
-                    value[r'tries[answer]'] = try_ans[answers[i-1]]
+                if answers[0][i] == 3:
+                    value[r'tries[answer]'] = try_ans[i-1]
                 else:
-                    value[r'tries[answer]'] = try_ans[answers[i+1]]
+                    value[r'tries[answer]'] = try_ans[i+1]
                 wrong -= 1
             # make request
             data = urllib.parse.urlencode(value).encode('utf-8')
@@ -190,8 +190,11 @@ class kanhan_api(object):
 
         real_id = id.split(r'/')[0]
         url = RESULT_URL.format(real_id)
-        with urllib.request.urlopen(url) as k:
-            raw = k.read().decode()
+        try:
+            with urllib.request.urlopen(url) as k:
+                raw = k.read().decode()
+        except urllib.error.HTTPError:
+            return None
 
         # search for answer url
         ex_code = re.search(

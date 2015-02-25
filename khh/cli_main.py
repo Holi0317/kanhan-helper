@@ -51,6 +51,7 @@ def main(day, month, year):
         with open(path, 'r') as f:
             raw = f.read()
         answer = json.loads(raw)
+        print(answer)
         exercise_result = api.take_exercise(id=id, answers=answer)
     else:
         click.echo("Answer not found. Randomly filling answers...")
@@ -79,13 +80,13 @@ def add_user(id, passwd, school_id):
     path = os.path.join('data', 'account')
     data = [id, passwd, school_id]
     data = json.dumps(data, sort_keys=True, indent=4)
+    if sys.platform.startswith('linux'):
+        os.chmod(path, 0o600)
     with open(path, 'w') as f:
         f.write(data)
     click.echo("Done")
 
     if sys.platform.startswith('linux'):
-        click.echo("Thank you for supporting open source, using GNU/Linux")
-        click.echo("Changing permission to 400 for secutity")
         os.chmod(path, 0o400)
 
 
@@ -95,7 +96,7 @@ def add_user(id, passwd, school_id):
               help='The target Month of exercise')
 @click.option('--year', '-y', default=None, help='The target year of exercise')
 def get_answer(day, month, year):
-    api = kanhan_api.kanhan_api()
+    api = khh.khhapi.kanhan_api()
     login(api)
 
     # date format module
@@ -111,7 +112,7 @@ def get_answer(day, month, year):
             date = date.replace(year=year)
 
     id = api.get_id(date=date)
-    click.echo("Getting answer for {0}".format(day))
+    click.echo("Getting answer for {0}".format(date))
     ans = api.get_answers(id=id)
     if ans is None:
         click.echo("You have not done that day's exercise")
@@ -150,8 +151,8 @@ def login(api):
 
 def dump(target, date):
     path = os.path.join('data', str(date.year), str(date.month))
-    if not path.exists:
-        os.path.makedirs(path)
+    if not os.path.exists:
+        os.makedirs(path)
     path = os.path.join(path, str(date.day))
     ans = json.dumps(target, sort_keys=True, indent=4)
     with open(path, 'w') as f:
