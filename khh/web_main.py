@@ -75,13 +75,11 @@ def main(sacrifice):
             click.echo('No need to sacrifice')
     else:
         # Sacrifice
-        select_to_sac = False
-        attempt = 1
         if len(object_list) == 1:
             the_selected_one = object_list[0]
         elif sacrifice is not None:
+            # select to sacrifice module
             the_selected_one = None
-            select_to_sac = True
             for i in len(object_list):
                 current_obj = object_list[i]
                 if current_obj.id == sacrifice:
@@ -97,30 +95,17 @@ def main(sacrifice):
         click.echo("Sacrificing {0} for todays answwer".format(
             the_selected_one.id))
 
-        while True:
-            do_return = the_selected_one.api.take_exercise()
-            if do_return:
-                click.echo("Successfuly sacrificed")
-                break
-            else:
-                click.echo("Failed, he has done his exercise")
-                if select_to_sac:
-                    click.echo("Could not sacrifice. Abording...")
-                    exit(1)
-                elif len(object_list) == 0:
-                    click.echo("No more people in the list. Abording...")
-                    exit(1)
-                else:
-                    attempt += 1
-                    ran = randrange(0, len(object_list)-1)
-                    the_selected_one = object_list.pop(ran)
-                    click.echo("Sacrifice {0} for today's answer. Attempt {1}"
-                               .format(the_selected_one.id, attempt))
-            if attempt == 11:
-                click.echo("Reached maximum attempt (10). Abording...")
+        do_return = the_selected_one.api.take_exercise()
+        if do_return:
+            click.echo("Successfuly sacrificed")
+            answer = the_selected_one.api.answers
+        else:
+            click.echo("He has done his exercise. getting answer")
+            answer = the_selected_one.api.get_answers()
+            if answer is None:
+                click.echo('No exercise today')
                 exit(1)
 
-        answer = the_selected_one.api.answers
         dump(answer, path)
 
     # Answer question
@@ -136,13 +121,15 @@ def main(sacrifice):
 
 
 @cli.command()
-@click.option('--id', help='Account of user', prompt='ID')
-@click.option('--passwd', help='Password of user', hide_input=True,
+@click.option('--id', '-i', help='Account of user', prompt='ID')
+@click.option('--passwd', '-p', help='Password of user', hide_input=True,
               prompt='Password')
-@click.option('--school_id', help='School ID of user', prompt='School id')
+@click.option('--school_id', '-s', help='School ID of user', prompt='School id')
 def add_user(id, passwd, school_id):
     click.echo('Adding user...')
     path = os.path.join('data', 'web_data')
+    if sys.platform.startswith('linux'):
+        os.chmod(path, 0o600)
     dump([id, passwd, school_id], path)
     if sys.platform.startswith('linux'):
         os.chmod(path, 0o400)
@@ -150,6 +137,8 @@ def add_user(id, passwd, school_id):
 
 
 def dump(value, path):
+    if not os.path.exists('data'):
+        os.makedirs('data')
     if os.path.isfile(path):
         with open(path, 'r') as f:
             raw = f.read()
@@ -161,6 +150,3 @@ def dump(value, path):
     with open(path, 'w') as f:
         f.write(data)
     return
-
-if __name__ == '__main__':
-    cli()
