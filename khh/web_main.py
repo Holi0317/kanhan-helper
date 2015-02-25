@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
-import kanhan_api
+import khhapi
 import json
 import click
 import os
@@ -13,7 +13,7 @@ import sys.platform
 
 class App(object):
     def __init__(self):
-        self.api = kanhan_api.kanhan_api()
+        self.api = khhapi.kanhan_api()
         self.failed = False
         return
 
