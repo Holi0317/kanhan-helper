@@ -37,8 +37,11 @@ class kanhan_api(object):
                  'form_id': 'user_login'}
         data = urllib.parse.urlencode(value).encode('utf-8')
         req = urllib.request.Request(AUTH_URL, data)
-        with urllib.request.urlopen(req) as k:
-            i = k.read().decode()
+        try:
+            with urllib.request.urlopen(req) as k:
+                i = k.read().decode()
+        except:
+            return False
         if re.search(r"很抱歉", i):
             return False
         return True

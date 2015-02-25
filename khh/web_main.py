@@ -47,10 +47,7 @@ def main():
         current_id = login_data[i][0]
         current_passwd = login_data[i][1]
         current_school_id = login_data[i][2]
-        try:
-            login_attempt = api.login(current_id, current_passwd, current_school_id)
-        except:
-            failed = True
+        login_attempt = api.login(current_id, current_passwd, current_school_id)
         if login_attempt:
             failed = False
         else:
