@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
-import khhapi
+import khh.khhapi
 import json
 import click
 import os
 from random import randrange
 import datetime
-import sys.platform
+import sys
 
 
 class App(object):
     def __init__(self):
-        self.api = khhapi.kanhan_api()
+        self.api = khh.khhapi.kanhan_api()
         self.failed = False
         return
 

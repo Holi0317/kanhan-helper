@@ -14,8 +14,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'khh-server = web_main:cli',
-            'khh-cli = cli_main:cli',
+            'khh-server = khh.web_main:cli',
+            'khh-cli = khh.cli_main:cli',
         ]
     }
 )
