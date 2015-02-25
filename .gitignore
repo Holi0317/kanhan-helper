@@ -61,3 +61,4 @@ target/
 /.env/*
 /data/*
 debug
+setuptools*.zip

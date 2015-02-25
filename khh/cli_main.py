@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
-import kanhan_api
+import khh.khhapi
 import json
 import datetime
 import click
 import os
-import sys.platform
+import sys
 
 
 @click.group()
@@ -21,7 +21,7 @@ def cli():
               help='The target Month of exercise')
 @click.option('--year', '-y', default=None, help='The target year of exercise')
 def main(day, month, year):
-    api = kanhan_api.kanhan_api()
+    api = khh.khhapi.kanhan_api()
     login(api)
 
     # Option formatter

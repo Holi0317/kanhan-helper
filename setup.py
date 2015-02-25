@@ -2,19 +2,22 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 
+from ez_setup import use_setuptools
+use_setuptools()
 from setuptools import setup, find_packages
 
 setup(
-    name="Kanhan Helper",
-    version="0.1",
+    name="khh",
+    version="0.3",
     packages=find_packages(),
+    # package_dir={'': 'khh'},
     install_requires=[
         'click',
     ],
     entry_points={
         'console_scripts': [
-            'khh-server = kanhan_helper.web_main:cli',
-            'khh-cli = kanhan_helper.cli_main:cli',
+            'khh-server = khh.web_main:cli',
+            'khh-cli = khh.cli_main:cli',
         ]
     }
 )
