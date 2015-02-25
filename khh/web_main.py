@@ -115,13 +115,11 @@ def add_user(id, passwd, school_id):
         data = json.loads(raw)
     else:
         data = []
-    data.append(value)
-    data = json.dumps(data, sort_keys=True, indent=4)
+    data.append([id, passwd, school_id])
+    json_dump = json.dumps(data, sort_keys=True, indent=4)
     with open(path, 'w') as f:
-        f.write(data)
+        f.write(json_dump)
 
     if sys.platform.startswith('linux'):
         os.chmod(path, 0o400)
     click.echo('Done')
-
-
