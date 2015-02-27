@@ -52,7 +52,7 @@ def main():
     api = khh.khhapi.kanhan_api()
 
     # Read json file
-    path = os.path.join(base, 'web_data')
+    path = os.path.join(base, 'web_data.json')
     if not os.path.isfile(path):
         logger.error('{0} Not found'.format(path))
         click.echo('Web_data file not found')
@@ -66,7 +66,8 @@ def main():
 
     # Check answer
     today = datetime.date.today()
-    path = os.path.join(base, str(today.year), str(today.month), str(today.day))
+    file_name = str(today.day) + '.json'
+    path = os.path.join(base, str(today.year), str(today.month), file_name)
     logger.info("The path of today's answer is {0}".format(path))
     if os.path.isfile(path):
         logger.info('Answer found')
@@ -116,11 +117,12 @@ def main():
                 # Dump to data
                 click.echo('Dumping answers to data')
                 path = os.path.join(base, str(today.year), str(today.month))
+                file_name = str(today.day) + '.json'
                 logger.info('Path to answer: {0}'.format(path))
                 if not os.path.exists(path):
                     logger.info('Path not exist')
                     os.makedirs(path)
-                path = os.path.join(path, str(today.day))
+                path = os.path.join(path, file_name)
                 dump_data = json.dumps(answer, sort_keys=True, indent=4)
                 with open(path, 'w') as f:
                     f.write(dump_data)
@@ -151,7 +153,7 @@ def add_user(id, passwd, school_id):
     logger.info('Base dir: {0}'.format(base))
 
     click.echo('Adding user...')
-    path = os.path.join(base, 'web_data')
+    path = os.path.join(base, 'web_data.json')
     logger.info('web_data path: {0}'.format(path))
     if sys.platform.startswith('linux'):
         logger.info('System platform is linux')
