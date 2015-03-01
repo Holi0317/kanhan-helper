@@ -52,11 +52,10 @@ def main():
     api = khh.khhapi.kanhan_api()
 
     # Read json file
-    path = os.path.join(base, 'web_data')
+    path = os.path.join(base, 'web_data.json')
     if not os.path.isfile(path):
         logger.error('{0} Not found'.format(path))
-        click.echo('Web_data file not found')
-        click.echo('Please Create one with add_user')
+        logger.error('Please Create one with add_user')
         exit(1)
     with open(path, 'r') as f:
         raw = f.read()
@@ -66,11 +65,11 @@ def main():
 
     # Check answer
     today = datetime.date.today()
-    path = os.path.join(base, str(today.year), str(today.month), str(today.day))
-    logger.info("The path of today's answer is {0}".format(path))
+    file_name = str(today.day) + '.json'
+    path = os.path.join(base, str(today.year), str(today.month), file_name)
+    logger.debug("The path of today's answer is {0}".format(path))
     if os.path.isfile(path):
         logger.info('Answer found')
-        click.echo('Found answer')
         with open(path, 'r') as f:
             raw = f.read()
         answer = json.loads(raw)
@@ -90,37 +89,36 @@ def main():
 
         if not login_attempt:
             logger.warn('{0} failed to login'.format(current_id))
-            click.echo('{0} failed to login'.format(current_id))
         else:
-            click.echo('{0} Login succeed'.format(current_id))
+            logger.info('{0} Login succeed'.format(current_id))
 
             # Get id
             id = api.get_id()
             logger.info("Today id is {0}".format(id))
             if id is None:
-                click.echo('Today has no exercise')
+                logger.error('Today has no exercise')
                 exit(1)
 
             # Sacrifice
             if i == 0 and need_sacrifice:
-                click.echo('Sacrificing {0} for answer'.format(current_id))
                 logger.info('Sacrificer: {0}'.format(current_id))
                 exercise_result = api.take_exercise()
                 if exercise_result:
-                    click.echo("He has done today's exercise. getting the answer...")
+                    logger.info("Sacrificer exercise done")
                     answer = api.get_answers()
                 else:
                     answer = api.answers
-                logger.info('Answer: {0}'.format(answer))
+                logger.debug('Answer: {0}'.format(answer))
 
                 # Dump to data
-                click.echo('Dumping answers to data')
+                logger.info('Dumping answers to data')
                 path = os.path.join(base, str(today.year), str(today.month))
-                logger.info('Path to answer: {0}'.format(path))
+                file_name = str(today.day) + '.json'
+                logger.debug('Path to answer: {0}'.format(path))
                 if not os.path.exists(path):
                     logger.info('Path not exist')
                     os.makedirs(path)
-                path = os.path.join(path, str(today.day))
+                path = os.path.join(path, file_name)
                 dump_data = json.dumps(answer, sort_keys=True, indent=4)
                 with open(path, 'w') as f:
                     f.write(dump_data)
@@ -131,10 +129,8 @@ def main():
                 ran = randrange(0, 3)
                 exercise_result = api.take_exercise(answers=answer, wrong=ran)
                 if exercise_result:
-                    click.echo('{0} Succeed'.format(current_id))
                     logger.info('{0} Succeed to complete with {1} wrong answer'.format(current_id, ran))
                 else:
-                    click.echo('{0} Have finished his exercise'.format(current_id))
                     logger.info('{0} already completed his exercise'.format(current_id))
 
     return
@@ -151,7 +147,7 @@ def add_user(id, passwd, school_id):
     logger.info('Base dir: {0}'.format(base))
 
     click.echo('Adding user...')
-    path = os.path.join(base, 'web_data')
+    path = os.path.join(base, 'web_data.json')
     logger.info('web_data path: {0}'.format(path))
     if sys.platform.startswith('linux'):
         logger.info('System platform is linux')

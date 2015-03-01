@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cd ~/projects/kanhan-helper
+source .env/bin/activate
+khh-server main
+retry=0
+
+while [ $?!=0 ]
+do
+    declare -i retry=retry+1
+    echo "Retry time: $retry"
+    sleep 10m
+    khh-server main
+done

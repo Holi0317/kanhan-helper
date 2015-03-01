@@ -10,7 +10,6 @@ setup(
     name="khh",
     version="0.3",
     packages=find_packages(),
-    # package_dir={'': 'khh'},
     install_requires=[
         'click',
     ],
