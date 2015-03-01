@@ -1,0 +1,9 @@
+[Unit]
+Description=KanHan helper server
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/h/bin/khh-server-start
+
+[Install]
+WantedBy=multi-user.target

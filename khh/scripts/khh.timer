@@ -1,0 +1,9 @@
+[Unit]
+Description=Kanhan Helper server runner
+
+[Timer]
+OnCalendar=8:00
+Persistent=True
+
+[Install]
+WantedBy=multi-user.target
