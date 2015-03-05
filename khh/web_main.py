@@ -50,6 +50,7 @@ def main():
     logger.info('================= Running main() ==========================')
     logger.info('Base dir is {0}'.format(base))
     api = khh.khhapi.kanhan_api()
+    failed = 0
 
     # Read json file
     path = os.path.join(base, 'web_data.json')
@@ -89,6 +90,7 @@ def main():
 
         if not login_attempt:
             logger.warn('{0} failed to login'.format(current_id))
+            failed += 1
         else:
             logger.info('{0} Login succeed'.format(current_id))
 
@@ -133,6 +135,8 @@ def main():
                 else:
                     logger.info('{0} already completed his exercise'.format(current_id))
 
+    if failed != 0:
+        logger.warn('{0} of {1} failed to login'.format(failed, len(login_data)))
     return
 
 
