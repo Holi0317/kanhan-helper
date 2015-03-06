@@ -48,7 +48,7 @@ def cli():
 def main():
     # Initial variables
     logger.info('================= Running main() ==========================')
-    logger.info('Base dir is {0}'.format(base))
+    logger.debug('Base dir is {0}'.format(base))
     api = khh.khhapi.kanhan_api()
     failed = 0
 
@@ -61,7 +61,7 @@ def main():
     with open(path, 'r') as f:
         raw = f.read()
     login_data = json.loads(raw)
-    logger.info('Login data is {0}'.format(login_data))
+    logger.debug('Login data is {0}'.format(login_data))
     logger.info('There are {0} users in the file'.format(len(login_data)))
 
     # Check answer
@@ -91,50 +91,52 @@ def main():
         if not login_attempt:
             logger.warn('{0} failed to login'.format(current_id))
             failed += 1
-        else:
-            logger.info('{0} Login succeed'.format(current_id))
+            continue
 
-            # Get id
-            id = api.get_id()
-            logger.info("Today id is {0}".format(id))
-            if id is None:
-                logger.error('Today has no exercise')
-                exit(1)
+        logger.info('{0} Login succeed'.format(current_id))
 
-            # Sacrifice
-            if i == 0 and need_sacrifice:
-                logger.info('Sacrificer: {0}'.format(current_id))
-                exercise_result = api.take_exercise()
-                if exercise_result:
-                    logger.info("Sacrificer exercise done")
-                    answer = api.get_answers()
-                else:
-                    answer = api.answers
-                logger.debug('Answer: {0}'.format(answer))
+        # Get id
+        id = api.get_id()
+        logger.info("Today id is {0}".format(id))
+        if id is None:
+            logger.error('Today has no exercise')
+            exit(1)
 
-                # Dump to data
-                logger.info('Dumping answers to data')
-                path = os.path.join(base, str(today.year), str(today.month))
-                file_name = str(today.day) + '.json'
-                logger.debug('Path to answer: {0}'.format(path))
-                if not os.path.exists(path):
-                    logger.info('Path not exist')
-                    os.makedirs(path)
-                path = os.path.join(path, file_name)
-                dump_data = json.dumps(answer, sort_keys=True, indent=4)
-                with open(path, 'w') as f:
-                    f.write(dump_data)
-                need_sacrifice = False
+        # Sacrifice
+        if i == 0 and need_sacrifice:
+            logger.info('Sacrificer: {0}'.format(current_id))
+            exercise_result = api.take_exercise()
+            if exercise_result:
+                logger.info("Sacrificer exercise done")
+                answer = api.get_answers()
+            else:
+                answer = api.answers
+            logger.debug('Answer: {0}'.format(answer))
 
-            # Answering question for others
-            if not need_sacrifice:
-                ran = randrange(0, 3)
-                exercise_result = api.take_exercise(answers=answer, wrong=ran)
-                if exercise_result:
-                    logger.info('{0} Succeed to complete with {1} wrong answer'.format(current_id, ran))
-                else:
-                    logger.info('{0} already completed his exercise'.format(current_id))
+            # Dump to data
+            logger.info('Dumping answers to data')
+            path = os.path.join(base, str(today.year), str(today.month))
+            file_name = str(today.day) + '.json'
+            logger.debug('Path to answer: {0}'.format(path))
+            if not os.path.exists(path):
+                logger.info('Path not exist')
+                os.makedirs(path)
+            path = os.path.join(path, file_name)
+            dump_data = json.dumps(answer, sort_keys=True, indent=4)
+            with open(path, 'w') as f:
+                f.write(dump_data)
+            need_sacrifice = False
 
+        # Answering question for others
+        if not need_sacrifice:
+            ran = randrange(0, 3)
+            exercise_result = api.take_exercise(answers=answer, wrong=ran)
+            if exercise_result:
+                logger.info('{0} Succeed to complete with {1} wrong answer'.format(current_id, ran))
+            else:
+                logger.info('{0} already completed his exercise'.format(current_id))
+
+    # Loop ended
     if failed != 0:
         logger.warn('{0} of {1} failed to login'.format(failed, len(login_data)))
     return
