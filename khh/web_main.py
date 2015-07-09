@@ -126,6 +126,7 @@ def main():
             with open(path, 'w') as f:
                 f.write(dump_data)
             need_sacrifice = False
+            continue
 
         # Answering question for others
         if not need_sacrifice:
